@@ -61,6 +61,9 @@ print("🚀 starting mcpfinder_server.py...")
 class MCPQuery(BaseModel):
     input: dict
 
+# make sure this is at the bottom of mcpfinder_server.py
+app = FastAPI()
+
 @app.get("/metadata")
 def metadata():
     return {
@@ -75,7 +78,8 @@ def metadata():
                 }
             },
             "required": ["task"]
-        }
+        },
+        "status": "ok"
     }
 
 @app.post("/run")
