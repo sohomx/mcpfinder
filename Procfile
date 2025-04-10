@@ -1,1 +1,1 @@
-web: gunicorn -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 mcpfinder_server:app
+gunicorn -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 mcpfinder_server:app
