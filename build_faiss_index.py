@@ -12,7 +12,7 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 assert openai.api_key, "❌ OPENAI_API_KEY not found in .env"
 
-# Step 1: Load and parse MCPs
+# Load and parse MCPs
 markdown = get_awesome_mcp_markdown()
 mcps = parse_markdown_for_mcps(markdown)
 texts = [f"{m['name']} - {m['description']}" for m in mcps]
