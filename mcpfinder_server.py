@@ -8,6 +8,7 @@ import numpy as np
 import os
 import requests
 import tempfile
+import traceback
 
 # --- huggingface assets ---
 ASSETS = {
@@ -30,12 +31,17 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 assert openai.api_key, "❌ OPENAI_API_KEY is missing"
 
 # --- load remote index + metadata ---
-index_path = download_temp(ASSETS["mcp_index.faiss"])
-metadata_path = download_temp(ASSETS["mcp_metadata.pkl"])
-
-index = faiss.read_index(index_path)
-with open(metadata_path, "rb") as f:
-    mcps = pickle.load(f)
+try:
+    index_path = download_temp(ASSETS["mcp_index.faiss"])
+    metadata_path = download_temp(ASSETS["mcp_metadata.pkl"])
+    index = faiss.read_index(index_path)
+    with open(metadata_path, "rb") as f:
+        mcps = pickle.load(f)
+    print("✅ FAISS index + metadata loaded")
+except Exception as e:
+    print("❌ failed to load index or metadata")
+    traceback.print_exc()
+    raise e
 
 # --- embedding function ---
 def embed_query(text, model="text-embedding-3-small"):
@@ -50,6 +56,7 @@ def search_mcp(task, top_k=5):
 
 # --- fastapi setup ---
 app = FastAPI()
+print("🚀 starting mcpfinder_server.py...")
 
 class MCPQuery(BaseModel):
     input: dict
