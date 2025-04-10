@@ -7,6 +7,20 @@ import pickle
 import numpy as np
 import os
 import json
+import requests
+
+# download index + metadata if missing
+ASSETS = {
+    "mcp_index.faiss": "https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss",
+    "mcp_metadata.pkl": "https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl"
+}
+
+for filename, url in ASSETS.items():
+    if not os.path.exists(filename):
+        print(f"⬇️  downloading {filename} from HF...")
+        r = requests.get(url)
+        with open(filename, "wb") as f:
+            f.write(r.content)
 
 # Load keys
 load_dotenv()
