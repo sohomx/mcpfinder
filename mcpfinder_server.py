@@ -11,10 +11,9 @@ import tempfile
 
 # --- huggingface assets ---
 ASSETS = {
-    "mcp_index.faiss": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss",
-    "mcp_metadata.pkl": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl"
+    "mcp_index.faiss": "https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss",
+    "mcp_metadata.pkl": "https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl"
 }
-
 # --- download remote file to temp path ---
 def download_temp(url):
     print(f"⬇️  downloading from {url}")
