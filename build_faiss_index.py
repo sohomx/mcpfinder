@@ -12,14 +12,14 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 assert openai.api_key, "❌ OPENAI_API_KEY not found in .env"
 
-# Load and parse MCPs
+# Step 1: Load and parse MCPs
 markdown = get_awesome_mcp_markdown()
 mcps = parse_markdown_for_mcps(markdown)
 texts = [f"{m['name']} - {m['description']}" for m in mcps]
 
 print(f"📝 Starting to embed {len(texts)} MCPs...\n")
 
-# Embedding function with retry
+# Step 2: Embed with retry
 def get_embeddings(texts, model="text-embedding-3-small"):
     vectors = []
     for i, text in enumerate(texts):
@@ -35,21 +35,19 @@ def get_embeddings(texts, model="text-embedding-3-small"):
                 time.sleep(1)
         else:
             print(f"❌ Failed to embed: {text[:60]}")
-            vectors.append([0.0]*1536)
+            vectors.append([0.0]*1536)  # fallback
         time.sleep(0.3)
     return vectors
 
-# Embed all MCPs
+# Step 3: Build CPU-safe FAISS index
 embeddings = get_embeddings(texts)
-
-# Build FAISS index
 dim = len(embeddings[0])
-index = faiss.IndexFlatL2(dim)
+index = faiss.IndexFlatL2(dim)  # 🧠 uses simple L2 distance, very portable
 index.add(np.array(embeddings).astype("float32"))
 
-# Save index + metadata
+# Step 4: Save both assets
+faiss.write_index(index, "mcp_index.faiss")
 with open("mcp_metadata.pkl", "wb") as f:
     pickle.dump(mcps, f)
-faiss.write_index(index, "mcp_index.faiss")
 
 print(f"\n✅ Indexed {len(mcps)} MCPs into FAISS using OpenAI embeddings.")
