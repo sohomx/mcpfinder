@@ -14,8 +14,8 @@ HF_REPO = "sohomx/mcpfinder-assets"
 HF_BASE_URL = f"https://huggingface.co/{HF_REPO}/resolve/main"
 
 ASSETS = {
-    "index": f"{HF_BASE_URL}/mcp_index.faiss",
-    "meta": f"{HF_BASE_URL}/mcp_metadata.pkl"
+    "mcp_index.faiss": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss",
+    "mcp_metadata.pkl": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl"
 }
 
 # --- utility: download to temp file ---
