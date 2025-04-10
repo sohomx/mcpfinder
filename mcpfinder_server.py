@@ -9,61 +9,52 @@ import os
 import requests
 import tempfile
 
-# --- remote asset config ---
-HF_REPO = "sohomx/mcpfinder-assets"
-HF_BASE_URL = f"https://huggingface.co/{HF_REPO}/resolve/main"
-
+# --- huggingface assets ---
 ASSETS = {
     "mcp_index.faiss": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss",
     "mcp_metadata.pkl": "https://huggingface.co/datasets/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl"
 }
 
-# --- utility: download to temp file ---
+# --- download remote file to temp path ---
 def download_temp(url):
-    print(f"⬇️  downloading: {url}")
+    print(f"⬇️  downloading from {url}")
     r = requests.get(url)
     r.raise_for_status()
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(r.content)
-        return f.name
+    tmp = tempfile.NamedTemporaryFile(delete=False)
+    tmp.write(r.content)
+    tmp.close()
+    return tmp.name
 
-# --- load index + metadata ---
-def load_assets():
-    index_path = download_temp(ASSETS["index"])
-    meta_path = download_temp(ASSETS["meta"])
+# --- environment setup ---
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+assert openai.api_key, "❌ OPENAI_API_KEY is missing"
 
-    idx = faiss.read_index(index_path)
-    with open(meta_path, "rb") as f:
-        data = pickle.load(f)
-    return idx, data
+# --- load remote index + metadata ---
+index_path = download_temp(ASSETS["mcp_index.faiss"])
+metadata_path = download_temp(ASSETS["mcp_metadata.pkl"])
 
-# --- embed text using OpenAI ---
+index = faiss.read_index(index_path)
+with open(metadata_path, "rb") as f:
+    mcps = pickle.load(f)
+
+# --- embedding function ---
 def embed_query(text, model="text-embedding-3-small"):
     response = openai.embeddings.create(input=text, model=model)
     return np.array(response.data[0].embedding, dtype="float32")
 
-# --- search top K from faiss ---
+# --- semantic search ---
 def search_mcp(task, top_k=5):
     vec = embed_query(task).reshape(1, -1)
     D, I = index.search(vec, top_k)
     return [mcps[i] for i in I[0]]
 
-# --- env setup ---
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-assert openai.api_key, "❌ OPENAI_API_KEY is missing"
-
-# --- load index + metadata ---
-index, mcps = load_assets()
-
-# --- fastapi app ---
+# --- fastapi setup ---
 app = FastAPI()
 
-# --- schema ---
 class MCPQuery(BaseModel):
     input: dict
 
-# --- endpoints ---
 @app.get("/metadata")
 def metadata():
     return {
