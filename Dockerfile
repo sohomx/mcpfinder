@@ -1,13 +1,19 @@
+# Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY . /app
 
-# install git-lfs and pull LFS-tracked files (like .faiss, .pkl)
-RUN apt-get update && apt-get install -y git-lfs && \
-    git lfs install && \
-    git lfs pull
-
+# Install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "mcpfinder_server:app", "--bind", "0.0.0.0:8000"]
+# Download FAISS + metadata index directly
+RUN apt-get update && apt-get install -y curl && \
+    curl -L -o mcp_index.faiss https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_index.faiss && \
+    curl -L -o mcp_metadata.pkl https://huggingface.co/sohomx/mcpfinder-assets/resolve/main/mcp_metadata.pkl
+
+# Copy app files
+COPY . .
+
+# Expose and run
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "mcpfinder_server:app"]
